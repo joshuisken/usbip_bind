@@ -1,0 +1,32 @@
+# Jos Huisken, 2-may-2021
+# Auto bind any FTDI device (well any product that includes an FTDI interface).
+# ONLY WORKS for devices connected after boot, since systemd  systemd-udevd.service is started well before usbipd.service
+# SO DEVICES ALREADY CONNECTED ARE NOT bind!!
+# ALSO: each rules is invoked quite a number of times for each device, how to fix that?  Replace ATTRS by ATTR!
+
+
+SUBSYSTEM=="usb" ATTR{idVendor}=="0403" ATTR{idProduct}=="6001" ACTION=="add" \
+	TAG+="systemd" ENV{SYSTEMD_WANTS}+="usbip-bind@%k.service"
+SUBSYSTEM=="usb" ATTR{idVendor}=="0403" ATTR{idProduct}=="6010" ACTION=="add" \
+	TAG+="systemd" ENV{SYSTEMD_WANTS}+="usbip-bind@%k.service"
+SUBSYSTEM=="usb" ATTR{idVendor}=="09fb" ATTR{idProduct}=="6001" ACTION=="add" \
+	TAG+="systemd" ENV{SYSTEMD_WANTS}+="usbip-bind@%k.service"
+SUBSYSTEM=="usb" ATTR{idVendor}=="09fb" ATTR{idProduct}=="6010" ACTION=="add" \
+	TAG+="systemd" ENV{SYSTEMD_WANTS}+="usbip-bind@%k.service"
+SUBSYSTEM=="usb" ATTR{idVendor}=="09fb" ATTR{idProduct}=="6810" ACTION=="add" \
+	TAG+="systemd" ENV{SYSTEMD_WANTS}+="usbip-bind@%k.service"
+
+
+# FTDI (Xilinx & Altera)
+#SUBSYSTEM=="usb" ATTR{idVendor}=="0403" ATTR{idProduct}=="6001" ACTION=="add" RUN+="/usr/bin/usbip bind -b $KERNEL"
+#SUBSYSTEM=="usb" ATTR{idVendor}=="0403" ATTR{idProduct}=="6010" ACTION=="add" RUN+="/usr/bin/usbip bind -b $KERNEL"
+
+# Altera serial
+#SUBSYSTEM=="usb" ATTR{idVendor}=="09fb" ATTR{idProduct}=="6001" ACTION=="add" RUN+="/usr/bin/usbip bind -b $KERNEL"
+
+# Altera jtag
+#SUBSYSTEM=="usb" ATTR{idVendor}=="09fb" ATTR{idProduct}=="6010" ACTION=="add" RUN+="/usr/bin/usbip bind -b $KERNEL"
+
+# Altera jtag blaster, I think
+#SUBSYSTEM=="usb" ATTR{idVendor}=="09fb" ATTR{idProduct}=="6810" ACTION=="add" RUN+="/usr/bin/usbip bind -b $KERNEL"
+

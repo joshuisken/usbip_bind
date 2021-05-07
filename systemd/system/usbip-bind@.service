@@ -1,0 +1,20 @@
+
+# Jos Huisken, 2-may-2021
+# Maybe not use this, is done using udev/rules.d.91-usbip-server-tools.rules
+# Well... devices connected at boot fail using usbip bind directly, since usbipd is not yet running at that time.
+# So need to be postponed, by using this service
+
+[Unit]
+Description=Bind USB device %I to usbipd
+After=network-online.target usbipd.service
+Wants=network-online.target usbipd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/usbip bind --busid %i
+ExecStop=/usr/sbin/usbip unbind --busid %i
+
+[Install]
+WantedBy=multi-user.target
+
