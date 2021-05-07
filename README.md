@@ -63,5 +63,98 @@ In this second service there exists a dependency that is only starts
 after <kbd>usbipd.service</kbd> has been started. Effectively delaying
 the binding of the USB device.
 
+### kernel configuration
+Use <kbd>dwc2</kbd> instead of <kbd>otg_dwc</kbd>
+
+On the raspberry, add the following line to <kbd>/boot/config</kbd> 
+
+    dtoverlay=dwc2
+
+Also add the folowing option to the kernel cmdline in
+<kbd>/boot/cmdline.txt</kbd> 
+
+    modules-load=dwc2
+
+That will replace the <kbd>dwc-otg</kbd> driver by <kbd>dwc2</kbd>,
+since the <kbd>dwc-otg</kbd> does not work at this time.
+
+### Installation
+
+The directories <kbd>systemd</kbd> and <kbd>udev</kbd> can be rsync-ed
+to the server to provide the udev rules and the systemd services.
+
+The kernel configuration needs to be done by hand.
+
+
 ##  Client configuration
+
+On the client you can find what USB devices are exported from the
+server using <kbd>usbip</kbd>
+
+    $ usbip list -r <server>
+
+Then you can attach a USB device with
+
+    $ usbip attach -r <server> -b <busid>
+
+With <kbd><busip></kbd> for example being <kbd>1-1.2.1</kbd>, i.e. the
+busid on the server.  Using <kbd>usbview</kbd> you can find a
+<kbd>USB/IP Virtual Host Controller</kbd> under which the attached USB
+devices can be found. There exist default 2 controller, one for USB2
+and one for USB3, i.e. 480Mb/s and 5GB/s. Each virtual host controller
+allows for maximal eight attached devices.
+
+
+### kernel configuration
+Often, having 8 virtual USB devices is not sufficient. One would like
+to increase the number of devices which can be attached at the same
+time.
+Sadly, the kernel module in which the max number of devices is defined
+can only be re-configured at compile time. I.e. a module parameter to
+dynamically extend the amount of devices does not exist at this time.
+
+Therefore, the kernel module <kbd>vhci_hcd</kbd> needs to be
+recompiled to increase the maximum number of virtual USB devices. Two
+variables are used for this:
+
+    CONFIG_USBIP_VHCI_HC_PORTS=10
+    CONFIG_USBIP_VHCI_NR_HCS=2
+
+The first increases the maximum number of devices to 10 for a virtual
+host controller. With the second parameters one can increase the
+number of host controllers. Filling in 2 means here that in total 4
+virtual host controllers are created, 2 for 480Mb/s and 2 for 5Gb/s.
+
+Bear in mind that possibly in other parts of the kernel the amount of
+USB devices is limited as well: I did not investigate this further.
+
+### Installation
+
+If needed the kernel module re-compilation needs to be done by
+hand. Further no extras need to be installed.
+
+## Intel/Altera FPGA boards
+
+On Altera boards the default device id for a JTAG-blaster is
+<kbd>09fb:6810</kbd>. This is the situation when the board is powered
+up. However, when you start the <kbd>jtagd</kbd> using
+<kbd>jtagconfig</kbd> the device is being re-programmed and turned
+into a device with id <kbd>09fb:6010</kbd>.
+
+This **kills the usbip connection**.
+
+So after starting the <kbd>jtagd</kbd> one has to re-attach the USB
+device as describe above. This operation needs be to repeated after
+the FPGA board went through a power cycle.
+The modified device seems to have become a dual uart of which one is
+used for the JTAG programmer.
+
+## Automating things
+
+As inital step a python script in <kbd>scripts</kbd> helps in
+performing the attachement of USB devices which needs to be extende to
+become more easily usable. 
+
+In this script a number of devices and the server are predefined, this
+needs to be done using an <kbd>.ini</kbd> file or similar.
 
